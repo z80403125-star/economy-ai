@@ -128,7 +128,7 @@ export default function AuthPage() {
 
         <div className="auth-switches">
           {mode === "login" && <button onClick={() => { setError(""); setMessage(""); setMode("reset"); }} type="button">Забыли пароль?</button>}
-          {mode !== "register" && <button onClick={() => { setError(""); setMessage(""); setMode("register"); }} type="button">Регистрация преподавателя</button>}
+          {(mode === "login" || mode === "reset") && <button onClick={() => { setError(""); setMessage(""); setMode("register"); }} type="button">Регистрация преподавателя</button>}
           {mode !== "login" && mode !== "success" && <button onClick={() => { setError(""); setMessage(""); setMode("login"); }} type="button">Назад ко входу</button>}
         </div>
         <p className="auth-privacy">Роль администратора нельзя получить через эту форму.</p>
