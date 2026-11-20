@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Восстановление пароля — ECONOMY AI</title>
+  </head>
+  <body>
+    <p>Проверяем ссылку восстановления пароля…</p>
+    <script>
+      const callbackParams = new URLSearchParams(window.location.hash.slice(1));
+      const callbackType = callbackParams.get("type");
+      const accessToken = callbackParams.get("access_token");
+      const refreshToken = callbackParams.get("refresh_token");
+      const basePath = new URL("./", window.location.href);
+
+      if (["recovery", "signup"].includes(callbackType) && accessToken && refreshToken) {
+        sessionStorage.setItem("supabase_auth_callback", callbackParams.toString());
+        const authState = callbackType === "recovery" ? "recovery=1" : "verified=1";
+        window.location.replace(`${basePath}#/auth?${authState}`);
+      } else {
+        document.body.textContent = "Ссылка недействительна или устарела. Запросите новую ссылку для сброса пароля.";
+      }
+    </script>
+  </body>
+</html>

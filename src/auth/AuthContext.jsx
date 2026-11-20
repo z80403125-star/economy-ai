@@ -34,21 +34,6 @@ export function AuthProvider({ children }) {
       setProfile(data);
     };
 
-    supabase.auth
-      .getSession()
-      .then(async ({ data, error: sessionError }) => {
-        if (!active) return;
-        if (sessionError) setError("Не удалось проверить вход в аккаунт.");
-        setSession(data?.session ?? null);
-        await loadProfile(data?.session?.user?.id);
-        if (active) setLoading(false);
-      })
-      .catch(() => {
-        if (!active) return;
-        setError("Не удалось проверить вход в аккаунт.");
-        setLoading(false);
-      });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -64,6 +49,39 @@ export function AuthProvider({ children }) {
           if (active) setLoading(false);
         }
       }, 0);
+    });
+
+    const initializeSession = async () => {
+      const callbackData = window.sessionStorage.getItem("supabase_auth_callback");
+      if (callbackData) {
+        window.sessionStorage.removeItem("supabase_auth_callback");
+        const callbackParams = new URLSearchParams(callbackData);
+        const accessToken = callbackParams.get("access_token");
+        const refreshToken = callbackParams.get("refresh_token");
+        const callbackType = callbackParams.get("type");
+        if (!["recovery", "signup"].includes(callbackType) || !accessToken || !refreshToken) {
+          throw new Error("Ссылка подтверждения недействительна.");
+        }
+
+        const { error: callbackError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (callbackError) throw callbackError;
+      }
+
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (!active) return;
+      if (sessionError) setError("Не удалось проверить вход в аккаунт.");
+      setSession(data?.session ?? null);
+      await loadProfile(data?.session?.user?.id);
+      if (active) setLoading(false);
+    };
+
+    initializeSession().catch(() => {
+      if (!active) return;
+      setError("Не удалось восстановить сеанс. Запросите новую ссылку для сброса пароля.");
+      setLoading(false);
     });
 
     return () => {

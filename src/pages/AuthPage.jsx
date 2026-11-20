@@ -1,15 +1,18 @@
 import { ArrowLeft, ArrowRight, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { supabase } from "../services/supabase.js";
 
 export default function AuthPage() {
   const { configured } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState(searchParams.get("recovery") === "1" ? "update" : "login");
   const [form, setForm] = useState({ fullName: "", institution: "", email: "", password: "", confirmPassword: "" });
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(
+    searchParams.get("verified") === "1" ? "Электронная почта подтверждена. Теперь можно войти в аккаунт." : "",
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -34,7 +37,7 @@ export default function AuthPage() {
           email: form.email,
           password: form.password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: "https://z80403125-star.github.io/economy-ai/auth-callback.html",
             data: { full_name: form.fullName.trim(), institution: form.institution.trim() },
           },
         });
@@ -42,10 +45,15 @@ export default function AuthPage() {
         setMessage("Заявка отправлена. Подтвердите электронную почту; преподавательский доступ появится после одобрения администратора.");
       } else if (mode === "reset") {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(form.email, {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: "https://z80403125-star.github.io/economy-ai/auth-callback.html",
         });
         if (resetError) throw resetError;
         setMessage("Если адрес зарегистрирован, на него придёт письмо для восстановления пароля.");
+      } else if (mode === "update") {
+        if (form.password !== form.confirmPassword) throw new Error("Пароли не совпадают.");
+        const { error: updateError } = await supabase.auth.updateUser({ password: form.password });
+        if (updateError) throw updateError;
+        setMode("success");
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({
           email: form.email,
@@ -67,13 +75,17 @@ export default function AuthPage() {
         <Link className="back-link" to="/"><ArrowLeft size={16} /> На главную</Link>
         <div className="auth-mark"><ShieldCheck size={23} /></div>
         <p className="eyebrow">ECONOMY AI</p>
-        <h1>{mode === "register" ? "Заявка преподавателя" : mode === "reset" ? "Восстановление пароля" : "С возвращением"}</h1>
+        <h1>{mode === "register" ? "Заявка преподавателя" : mode === "reset" ? "Восстановление пароля" : mode === "update" ? "Новый пароль" : mode === "success" ? "Пароль изменён" : "С возвращением"}</h1>
         <p className="auth-subtitle">
           {mode === "register"
             ? "После подтверждения почты аккаунт будет ожидать одобрения администратора."
             : mode === "reset"
               ? "Укажите электронную почту, связанную с аккаунтом."
-              : "Войдите в аккаунт преподавателя или администратора."}
+              : mode === "update"
+                ? "Придумайте новый пароль длиной не менее 8 символов."
+                : mode === "success"
+                  ? "Новый пароль сохранён. Теперь можно перейти в аккаунт."
+                  : "Войдите в аккаунт преподавателя или администратора."}
         </p>
 
         {!configured && (
@@ -84,34 +96,40 @@ export default function AuthPage() {
         {error && <div className="form-alert error" role="alert">{error}</div>}
         {message && <div className="form-alert success" role="status">{message}</div>}
 
-        <form className="auth-form" onSubmit={submit}>
-          {mode === "register" && (
-            <>
-              <label>ФИО<input autoComplete="name" name="fullName" onChange={update} required value={form.fullName} /></label>
-              <label>Учебное заведение<input autoComplete="organization" name="institution" onChange={update} required value={form.institution} /></label>
-            </>
-          )}
-          <label>Электронная почта
-            <span className="input-with-icon"><Mail size={16} /><input autoComplete="email" name="email" onChange={update} required type="email" value={form.email} /></span>
-          </label>
-          {mode !== "reset" && (
-            <label>Пароль
-              <span className="input-with-icon"><KeyRound size={16} /><input autoComplete={mode === "register" ? "new-password" : "current-password"} minLength={8} name="password" onChange={update} required type="password" value={form.password} /></span>
-            </label>
-          )}
-          {mode === "register" && (
-            <label>Повторите пароль<input autoComplete="new-password" minLength={8} name="confirmPassword" onChange={update} required type="password" value={form.confirmPassword} /></label>
-          )}
-          <button className="button button-primary auth-submit" disabled={busy || !configured} type="submit">
-            {busy ? "Подождите…" : mode === "register" ? "Отправить заявку" : mode === "reset" ? "Отправить ссылку" : "Войти"}
-            {!busy && <ArrowRight size={16} />}
-          </button>
-        </form>
+        {mode === "success" ? (
+          <Link className="button button-primary auth-submit" to="/profile">Перейти в аккаунт <ArrowRight size={16} /></Link>
+        ) : (
+          <form className="auth-form" onSubmit={submit}>
+            {mode === "register" && (
+              <>
+                <label>ФИО<input autoComplete="name" name="fullName" onChange={update} required value={form.fullName} /></label>
+                <label>Учебное заведение<input autoComplete="organization" name="institution" onChange={update} required value={form.institution} /></label>
+              </>
+            )}
+            {mode !== "update" && (
+              <label>Электронная почта
+                <span className="input-with-icon"><Mail size={16} /><input autoComplete="email" name="email" onChange={update} required type="email" value={form.email} /></span>
+              </label>
+            )}
+            {mode !== "reset" && (
+              <label>{mode === "update" ? "Новый пароль" : "Пароль"}
+                <span className="input-with-icon"><KeyRound size={16} /><input autoComplete={mode === "register" || mode === "update" ? "new-password" : "current-password"} minLength={8} name="password" onChange={update} required type="password" value={form.password} /></span>
+              </label>
+            )}
+            {(mode === "register" || mode === "update") && (
+              <label>Повторите пароль<input autoComplete="new-password" minLength={8} name="confirmPassword" onChange={update} required type="password" value={form.confirmPassword} /></label>
+            )}
+            <button className="button button-primary auth-submit" disabled={busy || !configured} type="submit">
+              {busy ? "Подождите…" : mode === "register" ? "Отправить заявку" : mode === "reset" ? "Отправить ссылку" : mode === "update" ? "Сохранить пароль" : "Войти"}
+              {!busy && <ArrowRight size={16} />}
+            </button>
+          </form>
+        )}
 
         <div className="auth-switches">
           {mode === "login" && <button onClick={() => { setError(""); setMessage(""); setMode("reset"); }} type="button">Забыли пароль?</button>}
           {mode !== "register" && <button onClick={() => { setError(""); setMessage(""); setMode("register"); }} type="button">Регистрация преподавателя</button>}
-          {mode !== "login" && <button onClick={() => { setError(""); setMessage(""); setMode("login"); }} type="button">Назад ко входу</button>}
+          {mode !== "login" && mode !== "success" && <button onClick={() => { setError(""); setMessage(""); setMode("login"); }} type="button">Назад ко входу</button>}
         </div>
         <p className="auth-privacy">Роль администратора нельзя получить через эту форму.</p>
       </section>

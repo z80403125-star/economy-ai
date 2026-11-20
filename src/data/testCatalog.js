@@ -84,7 +84,7 @@ export const testCatalog = [
     /[!'()*]/g,
     (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
   );
-  const basePath = import.meta.env.BASE_URL || "/";
+  const basePath = import.meta.env?.BASE_URL || "/";
   const path = `${basePath}tests/${folderPath}`;
   return {
     ...test,
