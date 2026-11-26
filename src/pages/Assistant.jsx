@@ -1,10 +1,8 @@
 import { Bot, Send, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext.jsx";
+import { getLocalEconomicsAnswer } from "../services/localAssistant.js";
 
 export default function Assistant() {
-  const { configured, session, profile, loading } = useAuth();
   const [messages, setMessages] = useState([]);
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState("");
@@ -26,58 +24,12 @@ export default function Assistant() {
     setError("");
     setBusy(true);
 
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ messages: nextMessages }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Не удалось получить ответ.");
-      if (typeof result.content !== "string" || !result.content.trim()) {
-        throw new Error("Сервис ИИ вернул пустой ответ.");
-      }
-      setMessages((current) => [...current, { role: "assistant", content: result.content }]);
-    } catch (requestError) {
-      setError(requestError.message || "Не удалось связаться с ИИ-помощником.");
-      inputRef.current?.focus();
-    } finally {
+    const answer = getLocalEconomicsAnswer(text);
+    window.setTimeout(() => {
+      setMessages((current) => [...current, { role: "assistant", content: answer }]);
       setBusy(false);
-    }
-  }
-
-  if (!configured) {
-    return (
-      <section className="access-panel">
-        <p className="eyebrow">НАСТРОЙКА ИИ</p>
-        <h1>ИИ-помощник</h1>
-        <p>Сначала настройте Supabase Auth и серверные параметры ИИ и ограничения запросов.</p>
-      </section>
-    );
-  }
-  if (loading) return <div className="loading-panel">Проверяем доступ…</div>;
-  if (!session) {
-    return (
-      <section className="access-panel">
-        <p className="eyebrow">ТРЕБУЕТСЯ ВХОД</p>
-        <h1>ИИ-помощник</h1>
-        <p>Войдите в подтверждённый аккаунт преподавателя, чтобы открыть помощника.</p>
-        <Link className="button button-primary" to="/auth">Войти</Link>
-      </section>
-    );
-  }
-  if (!profile || profile.status !== "approved" || !["teacher", "admin"].includes(profile.role)) {
-    return (
-      <section className="access-panel">
-        <p className="eyebrow">ДОСТУП ОГРАНИЧЕН</p>
-        <h1>ИИ-помощник</h1>
-        <p>Раздел доступен только одобренным преподавателям.</p>
-        <Link className="button button-secondary" to="/profile">Проверить профиль</Link>
-      </section>
-    );
+      inputRef.current?.focus();
+    }, 150);
   }
 
   return (
@@ -85,13 +37,13 @@ export default function Assistant() {
       <section className="page-heading">
         <p className="eyebrow">УЧЕБНЫЙ ИНСТРУМЕНТ</p>
         <h1>ИИ-помощник</h1>
-        <p>Задайте вопрос по экономике. Ответы формируются сервером; секретный ключ не передаётся в браузер.</p>
+        <p>Задайте вопрос по экономике. Ответы формируются локально — без сервера, регистрации и API-ключей.</p>
       </section>
       <section aria-label="Чат с ИИ-помощником" className="assistant-panel">
         <div className="assistant-heading">
           <div className="assistant-avatar"><Bot size={20} /></div>
           <div><strong>Помощник ECONOMY AI</strong><span>Учебные объяснения простыми словами</span></div>
-          <span className="assistant-secure"><Sparkles size={14} /> Серверный запрос</span>
+          <span className="assistant-secure"><Sparkles size={14} /> Локальный ответ</span>
           {messages.length > 0 && (
             <button className="new-chat-button" onClick={() => { setMessages([]); setError(""); }} type="button">
               Новый диалог

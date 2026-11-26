@@ -91,7 +91,29 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ session, profile, loading, error, configured: isSupabaseConfigured }),
+    () => ({
+      session,
+      profile,
+      loading,
+      error,
+      configured: isSupabaseConfigured,
+      refreshProfile: async () => {
+        if (!session?.user?.id) return;
+        setLoading(true);
+        const { data, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, full_name, institution, role, status")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (profileError) {
+          setError("Не удалось обновить профиль.");
+        } else {
+          setProfile(data);
+          setError("");
+        }
+        setLoading(false);
+      },
+    }),
     [session, profile, loading, error],
   );
 

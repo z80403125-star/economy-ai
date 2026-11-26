@@ -6,6 +6,19 @@ const MAX_MESSAGE_LENGTH = 6000;
 const RATE_LIMIT_PER_MINUTE = 15;
 
 export default async function handler(request, response) {
+  const origin = request.headers.origin;
+  const allowedOrigin = process.env.AI_ALLOWED_ORIGIN || "https://z80403125-star.github.io";
+  response.setHeader("Content-Type", "application/json; charset=utf-8");
+  response.setHeader("Vary", "Origin");
+  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  if (origin && (origin === allowedOrigin || origin === "http://localhost:5173")) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  if (request.method === "OPTIONS") {
+    return response.status(204).end();
+  }
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Поддерживается только POST-запрос." });
@@ -20,7 +33,15 @@ export default async function handler(request, response) {
     });
   }
 
-  const messages = request.body?.messages;
+  let requestBody = request.body;
+  if (typeof requestBody === "string") {
+    try {
+      requestBody = JSON.parse(requestBody);
+    } catch {
+      return response.status(400).json({ error: "Некорректный JSON-запрос." });
+    }
+  }
+  const messages = requestBody?.messages;
   if (
     !Array.isArray(messages) ||
     messages.length === 0 ||

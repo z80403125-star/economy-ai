@@ -87,7 +87,7 @@
 - `SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY` для проверки преподавателя;
 - `UPSTASH_REDIS_REST_URL` и `UPSTASH_REDIS_REST_TOKEN` для ограничения частоты запросов.
 
-Добавьте эти переменные в локальный `.env` и в **Vercel → Project Settings → Environment Variables**. Без всех обязательных настроек API возвращает понятную ошибку, а не имитирует ответ ИИ. Лимит сейчас — 15 обращений на аккаунт в минуту.
+Добавьте серверные переменные в локальный `.env` и в **Vercel → Project Settings → Environment Variables**. Для GitHub Pages также настройте переменную репозитория `VITE_AI_API_URL` как полный URL endpoint, например `https://ВАШ-ПРОЕКТ.vercel.app/api/ai/chat`; workflow передаст её в сборку. В Vercel задайте `AI_ALLOWED_ORIGIN=https://z80403125-star.github.io`, чтобы разрешить запросы с опубликованного сайта. GitHub Pages не запускает функции из каталога `api/`, поэтому без отдельного Vercel deployment ИИ-помощник работать не будет. Без обязательных серверных настроек API возвращает понятную ошибку, а не имитирует ответ ИИ. Лимит сейчас — 15 обращений на аккаунт в минуту.
 
 ## Публикация через GitHub и Vercel
 

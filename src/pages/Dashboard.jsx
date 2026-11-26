@@ -49,7 +49,7 @@ export default function Dashboard() {
         <div className="quick-grid">
           <QuickCard icon={FileQuestion} title="Каталог тестов" text="Выберите тему и проверьте знания." to="/tests" tone="blue" />
           <QuickCard icon={BookOpen} title="Библиотека лекций" text="Материалы появятся после подключения библиотеки." to="/lectures" tone="violet" />
-          <QuickCard icon={Sparkles} title="ИИ-помощник" text="Подключите серверный API, чтобы включить ИИ." to="/assistant" tone="green" />
+          <QuickCard icon={Sparkles} title="ИИ-помощник" text="Задавайте вопросы по экономике прямо сейчас." to="/assistant" tone="green" />
         </div>
       </section>
 

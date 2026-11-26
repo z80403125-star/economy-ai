@@ -276,6 +276,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .profile-details h2 { margin: 2px 0 8px; color: #1e2d48; font-family: Manrope, sans-serif; font-size: 17px; }
 .profile-details p:not(.eyebrow) { display: flex; align-items: center; gap: 7px; margin: 5px 0; color: #718097; font-size: 10px; }
 .profile-card > .button { flex: 0 0 auto; }
+.profile-name-editor { display: grid; gap: 14px; padding: 20px 22px; border: 1px solid #e8edf4; border-radius: 14px; background: #fff; }
+.profile-name-editor h2 { margin: 3px 0 0; color: #1e2d48; font-family: Manrope, sans-serif; font-size: 16px; }
+.profile-name-form { display: grid; gap: 7px; color: #53627a; font-size: 10px; font-weight: 700; }
+.profile-name-actions { display: flex; gap: 8px; }
+.profile-name-actions input { min-width: 0; flex: 1; min-height: 39px; padding: 0 11px; border: 1px solid #e4e9f1; border-radius: 8px; background: #fbfcfe; color: var(--ink); font-size: 11px; }
 .assistant-panel { display: grid; max-width: 860px; min-height: 490px; grid-template-rows: auto 1fr auto; overflow: hidden; border: 1px solid #e8edf4; border-radius: 15px; background: #fff; }
 .assistant-heading { display: flex; align-items: center; gap: 11px; padding: 16px 19px; border-bottom: 1px solid #edf1f6; }
 .assistant-avatar { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #eaf2ff; color: #3376d8; }
@@ -366,6 +371,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .copy-button span { display: none; }
   .profile-card { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
   .profile-card > .button { width: 100%; }
+  .profile-name-actions { align-items: stretch; flex-direction: column; }
+  .profile-name-actions .button { width: 100%; }
   .auth-card { padding: 23px 18px; }
   .assistant-heading { padding: 13px; }
   .assistant-secure { display: none !important; }

@@ -170,6 +170,7 @@ alter table public.favorites enable row level security;
 alter table public.activity_logs enable row level security;
 
 grant select, update on public.profiles to authenticated;
+grant select, update on public.profiles to service_role;
 grant select, insert, update, delete on public.tests to authenticated;
 grant select on public.tests to anon;
 grant select, insert, update, delete on public.test_questions to authenticated;
