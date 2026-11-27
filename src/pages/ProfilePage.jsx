@@ -83,7 +83,7 @@ export default function ProfilePage() {
         <div className="profile-details">
           <p className="eyebrow">ПРОФИЛЬ</p>
           <h2>{profile?.full_name || "Имя не указано"}</h2>
-          <p><UserRound size={15} />Логин: {profile?.username || "не указан"}</p>
+          <p><UserRound size={15} />Email: {session.user.email}</p>
           <p><ShieldCheck size={15} />{statusLabel(profile?.role, profile?.status)}</p>
           {profile?.institution && <p>{profile.institution}</p>}
         </div>

@@ -20,7 +20,7 @@ export default function AdminPanel() {
     try {
       const { data, error: queryError } = await supabase
         .from("profiles")
-        .select("id, username, full_name, institution, role, status, created_at")
+        .select("id, full_name, institution, role, status, created_at")
         .order("created_at", { ascending: false });
 
       if (queryError) {
@@ -160,7 +160,7 @@ export default function AdminPanel() {
                     <span className="admin-account-icon"><ShieldCheck size={18} /></span>
                     <div>
                       <h3>{profile.full_name}</h3>
-                      <p className="admin-account-username">@{profile.username}</p>
+                      <p className="admin-account-username">ID: {profile.id.slice(0, 8)}</p>
                       <p>{profile.institution || "Учебное заведение не указано"}</p>
                       <span className="admin-account-meta">
                         {roleLabel(profile.role)} · {statusLabel(profile.status)}
