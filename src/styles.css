@@ -262,6 +262,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .auth-subtitle { margin: 0 0 17px; color: #7d899a; font-size: 10px; line-height: 1.65; }
 .auth-form { display: grid; gap: 13px; }
 .auth-form label { display: grid; gap: 6px; color: #53627a; font-size: 10px; font-weight: 700; }
+.auth-field-hint { color: #8996a8; font-size: 9px; font-weight: 400; }
 .auth-form input { width: 100%; min-height: 39px; padding: 0 11px; border: 1px solid #e4e9f1; border-radius: 8px; background: #fbfcfe; color: var(--ink); font-size: 11px; }
 .input-with-icon { position: relative; display: flex; align-items: center; }
 .input-with-icon > svg { position: absolute; left: 11px; color: #9aa6b5; }
@@ -287,13 +288,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .admin-summary-card strong { color: var(--navy); font-family: Manrope, sans-serif; font-size: 24px; }
 .admin-accounts { display: grid; gap: 14px; }
 .admin-account-list { display: grid; gap: 9px; }
-.admin-account { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 17px; border: 1px solid #e8edf4; border-radius: 12px; background: #fff; }
+.admin-account { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 17px; border: 1px solid #e8edf4; border-radius: 12px; background: #fff; }
 .admin-account-identity { display: flex; min-width: 0; align-items: flex-start; gap: 12px; }
 .admin-account-icon { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: #eaf2ff; color: #3476d8; }
 .admin-account-identity h3 { margin: 0 0 4px; color: #1e2d48; font-size: 12px; }
 .admin-account-identity p { margin: 0 0 5px; color: #718097; font-size: 10px; }
+.admin-account-identity .admin-account-username { color: #3476d8; font-weight: 700; }
 .admin-account-meta { color: #929eae; font-size: 9px; }
 .admin-account-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 7px; }
+.admin-account-password { display: flex; width: 100%; align-items: end; gap: 8px; }
+.admin-account-password label { display: grid; flex: 1; gap: 6px; color: #53627a; font-size: 10px; font-weight: 700; }
+.admin-account-password input { min-width: 0; min-height: 36px; padding: 0 10px; border: 1px solid #e4e9f1; border-radius: 8px; background: #fbfcfe; font-size: 11px; }
 .button-danger { border-color: #f0d7d4; background: #fff; color: #a64b42; }
 .button-danger:hover:not(:disabled) { border-color: #e8bdb8; background: #fff5f4; }
 .assistant-panel { display: grid; max-width: 860px; min-height: 490px; grid-template-rows: auto 1fr auto; overflow: hidden; border: 1px solid #e8edf4; border-radius: 15px; background: #fff; }

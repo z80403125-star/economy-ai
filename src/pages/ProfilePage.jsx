@@ -1,4 +1,4 @@
-import { LogOut, Mail, Save, ShieldCheck, UserRound } from "lucide-react";
+import { LogOut, Save, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
@@ -83,7 +83,7 @@ export default function ProfilePage() {
         <div className="profile-details">
           <p className="eyebrow">ПРОФИЛЬ</p>
           <h2>{profile?.full_name || "Имя не указано"}</h2>
-          <p><Mail size={15} />{session.user.email}</p>
+          <p><UserRound size={15} />Логин: {profile?.username || "не указан"}</p>
           <p><ShieldCheck size={15} />{statusLabel(profile?.role, profile?.status)}</p>
           {profile?.institution && <p>{profile.institution}</p>}
         </div>

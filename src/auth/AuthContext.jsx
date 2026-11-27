@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
 
       const { data, error: profileError } = await supabase
         .from("profiles")
-        .select("id, full_name, institution, role, status")
+        .select("id, username, full_name, institution, role, status")
         .eq("id", userId)
         .maybeSingle();
 
@@ -102,7 +102,7 @@ export function AuthProvider({ children }) {
         setLoading(true);
         const { data, error: profileError } = await supabase
           .from("profiles")
-          .select("id, full_name, institution, role, status")
+          .select("id, username, full_name, institution, role, status")
           .eq("id", session.user.id)
           .maybeSingle();
         if (profileError) {

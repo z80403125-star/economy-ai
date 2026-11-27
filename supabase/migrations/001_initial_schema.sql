@@ -5,6 +5,7 @@ create type public.account_status as enum ('pending', 'approved', 'blocked');
 
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
+  username text not null check (username ~ '^[a-z0-9][a-z0-9_-]{2,23}$'),
   full_name text not null check (char_length(full_name) between 2 and 160),
   institution text not null default '' check (char_length(institution) <= 240),
   role public.app_role not null default 'teacher',
@@ -12,6 +13,8 @@ create table public.profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create unique index profiles_username_unique_idx on public.profiles (username);
 
 create table public.tests (
   slug text primary key check (slug ~ '^[a-z0-9-]+$'),
@@ -139,9 +142,13 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id, full_name, institution, role, status)
+  insert into public.profiles (id, username, full_name, institution, role, status)
   values (
     new.id,
+    coalesce(
+      nullif(lower(trim(new.raw_user_meta_data ->> 'username')), ''),
+      'user_' || substring(replace(new.id::text, '-', ''), 1, 12)
+    ),
     coalesce(nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''), 'Преподаватель'),
     coalesce(new.raw_user_meta_data ->> 'institution', ''),
     'teacher',

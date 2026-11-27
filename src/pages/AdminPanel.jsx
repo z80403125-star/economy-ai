@@ -8,6 +8,9 @@ export default function AdminPanel() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
+  const [resetTarget, setResetTarget] = useState("");
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [passwordResetBusy, setPasswordResetBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -17,7 +20,7 @@ export default function AdminPanel() {
     try {
       const { data, error: queryError } = await supabase
         .from("profiles")
-        .select("id, full_name, institution, role, status, created_at")
+        .select("id, username, full_name, institution, role, status, created_at")
         .order("created_at", { ascending: false });
 
       if (queryError) {
@@ -63,6 +66,40 @@ export default function AdminPanel() {
       setError(`Не удалось изменить статус аккаунта: ${updateError.message || "ошибка соединения."}`);
     } finally {
       setBusyId("");
+    }
+  }
+
+  async function resetAccountPassword(profile, event) {
+    event.preventDefault();
+    if (temporaryPassword.length < 8 || temporaryPassword.length > 128) {
+      setError("Временный пароль должен содержать от 8 до 128 символов.");
+      return;
+    }
+
+    setPasswordResetBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch(
+        import.meta.env.VITE_ADMIN_RESET_API_URL || "/api/admin/reset-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId: profile.id, password: temporaryPassword }),
+        },
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.error || "Не удалось изменить пароль.");
+
+      setNotice(`Пароль для «${profile.full_name}» изменён. Передайте временный пароль пользователю по безопасному каналу.`);
+      setResetTarget("");
+    } catch (resetError) {
+      setError(resetError.message || "Не удалось изменить пароль.");
+    } finally {
+      setPasswordResetBusy(false);
     }
   }
 
@@ -123,6 +160,7 @@ export default function AdminPanel() {
                     <span className="admin-account-icon"><ShieldCheck size={18} /></span>
                     <div>
                       <h3>{profile.full_name}</h3>
+                      <p className="admin-account-username">@{profile.username}</p>
                       <p>{profile.institution || "Учебное заведение не указано"}</p>
                       <span className="admin-account-meta">
                         {roleLabel(profile.role)} · {statusLabel(profile.status)}
@@ -161,7 +199,43 @@ export default function AdminPanel() {
                         {isBusy ? "Сохраняем…" : "Заблокировать"}
                       </button>
                     )}
+                    {!isCurrentUser && (
+                      <button
+                        className="button button-secondary button-small"
+                        onClick={() => {
+                          setResetTarget(resetTarget === profile.id ? "" : profile.id);
+                          setTemporaryPassword("");
+                          setError("");
+                          setNotice("");
+                        }}
+                        type="button"
+                      >
+                        Сбросить пароль
+                      </button>
+                    )}
                   </div>
+                  {resetTarget === profile.id && (
+                    <form
+                      className="admin-account-password"
+                      onSubmit={(event) => resetAccountPassword(profile, event)}
+                    >
+                      <label>
+                        Временный пароль
+                        <input
+                          autoComplete="new-password"
+                          maxLength={128}
+                          minLength={8}
+                          onChange={(event) => setTemporaryPassword(event.target.value)}
+                          required
+                          type="password"
+                          value={temporaryPassword}
+                        />
+                      </label>
+                      <button className="button button-primary button-small" disabled={passwordResetBusy} type="submit">
+                        {passwordResetBusy ? "Сохраняем…" : "Назначить пароль"}
+                      </button>
+                    </form>
+                  )}
                 </article>
               );
             })}
