@@ -7,7 +7,8 @@ import { supabase } from "../services/supabase.js";
 const USERNAME_PATTERN = /^[a-z0-9][a-z0-9_-]{2,23}$/;
 
 function authEmailForUsername(username) {
-  return `${username}@accounts.economy-ai.invalid`;
+  const supabaseDomain = new URL(import.meta.env.VITE_SUPABASE_URL).hostname;
+  return `${username}@${supabaseDomain}`;
 }
 
 export default function AuthPage() {
