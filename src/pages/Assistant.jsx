@@ -1,6 +1,7 @@
 import { Bot, Send, Sparkles, UserRound } from "lucide-react";
 import { useRef, useState } from "react";
-import { getLocalEconomicsAnswer } from "../services/localAssistant.js";
+import { useAuth } from "../auth/AuthContext.jsx";
+import { callAi } from "../services/aiClient.js";
 
 export default function Assistant() {
   const [messages, setMessages] = useState([]);
@@ -8,6 +9,7 @@ export default function Assistant() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const inputRef = useRef(null);
+  const { session, profile, configured, loading } = useAuth();
 
   async function sendMessage(event) {
     event.preventDefault();
@@ -24,12 +26,25 @@ export default function Assistant() {
     setError("");
     setBusy(true);
 
-    const answer = getLocalEconomicsAnswer(text);
-    window.setTimeout(() => {
+    try {
+      if (!configured) throw new Error("Для ИИ-помощника необходимо настроить Supabase.");
+      if (loading) throw new Error("Проверяем доступ к аккаунту. Повторите запрос через секунду.");
+      if (!session) throw new Error("Войдите в аккаунт, чтобы пользоваться ИИ-помощником.");
+      if (!profile || profile.status !== "approved") {
+        throw new Error("ИИ-помощник доступен только для одобренных аккаунтов.");
+      }
+
+      const answer = await callAi({
+        accessToken: session.access_token,
+        messages: nextMessages,
+      });
       setMessages((current) => [...current, { role: "assistant", content: answer }]);
+    } catch (requestError) {
+      setError(requestError.message || "Не удалось получить ответ ИИ.");
+    } finally {
       setBusy(false);
       inputRef.current?.focus();
-    }, 150);
+    }
   }
 
   return (
@@ -37,13 +52,13 @@ export default function Assistant() {
       <section className="page-heading">
         <p className="eyebrow">УЧЕБНЫЙ ИНСТРУМЕНТ</p>
         <h1>ИИ-помощник</h1>
-        <p>Задайте вопрос по экономике. Ответы формируются локально — без сервера, регистрации и API-ключей.</p>
+        <p>Задайте вопрос по экономике, учёбе или практическим задачам. Ответы формируются ИИ-сервисом.</p>
       </section>
       <section aria-label="Чат с ИИ-помощником" className="assistant-panel">
         <div className="assistant-heading">
           <div className="assistant-avatar"><Bot size={20} /></div>
           <div><strong>Помощник ECONOMY AI</strong><span>Учебные объяснения простыми словами</span></div>
-          <span className="assistant-secure"><Sparkles size={14} /> Локальный ответ</span>
+          <span className="assistant-secure"><Sparkles size={14} /> Серверный ИИ</span>
           {messages.length > 0 && (
             <button className="new-chat-button" onClick={() => { setMessages([]); setError(""); }} type="button">
               Новый диалог

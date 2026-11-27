@@ -7,13 +7,14 @@ import Sidebar from "./components/Sidebar.jsx";
 import Assistant from "./pages/Assistant.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
+import TestGenerator from "./pages/TestGenerator.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ProtectedModule from "./pages/ProtectedModule.jsx";
 import TestCatalog from "./pages/TestCatalog.jsx";
 
 const publicModules = {
   "/lectures": ["Библиотека лекций", "Библиотека станет доступна после добавления проверенных материалов."],
-  "/generator": ["Генератор тестов", "Генерация будет включена после настройки серверного ИИ и сохранения в Supabase."],
   "/statistics": ["Статистика", "Здесь появятся показатели только по сохранённым попыткам. Пока результатов нет."],
   "/support": ["Поддержка", "Канал поддержки будет опубликован после настройки контактов платформы."],
   "/settings": ["Настройки", "Персональные настройки аккаунта появятся после подключения профилей."],
@@ -34,6 +35,7 @@ function AppLayout() {
             <Route element={<Dashboard />} path="/" />
             <Route element={<TestCatalog />} path="/tests" />
             <Route element={<Assistant />} path="/assistant" />
+            <Route element={<TestGenerator />} path="/generator" />
             <Route element={<AuthPage />} path="/auth" />
             <Route element={<ProfilePage />} path="/profile" />
             <Route
@@ -41,7 +43,11 @@ function AppLayout() {
               path="/teacher"
             />
             <Route
-              element={<ProtectedModule description="Панель администратора требует настроенной роли admin в базе данных." requiredRole="admin" title="Панель администратора" />}
+              element={
+                <ProtectedModule requiredRole="admin" title="Панель администратора">
+                  <AdminPanel />
+                </ProtectedModule>
+              }
               path="/admin"
             />
             {Object.entries(publicModules).map(([path, [title, description]]) => (

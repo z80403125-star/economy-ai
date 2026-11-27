@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import ModuleNotice from "../components/ModuleNotice.jsx";
 
-export default function ProtectedModule({ title, description, requiredRole }) {
+export default function ProtectedModule({ title, description, requiredRole, children }) {
   const { configured, session, profile, loading } = useAuth();
 
   if (!configured) {
@@ -39,5 +39,5 @@ export default function ProtectedModule({ title, description, requiredRole }) {
     );
   }
 
-  return <ModuleNotice description={description} title={title} />;
+  return children || <ModuleNotice description={description} title={title} />;
 }

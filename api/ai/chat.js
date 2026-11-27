@@ -12,7 +12,12 @@ export default async function handler(request, response) {
   response.setHeader("Vary", "Origin");
   response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-  if (origin && (origin === allowedOrigin || origin === "http://localhost:5173")) {
+  if (
+    origin &&
+    (origin === allowedOrigin ||
+      origin === "http://localhost:5173" ||
+      origin === "http://127.0.0.1:5173")
+  ) {
     response.setHeader("Access-Control-Allow-Origin", origin);
   }
   if (request.method === "OPTIONS") {
@@ -42,7 +47,18 @@ export default async function handler(request, response) {
     }
   }
   const messages = requestBody?.messages;
-  if (
+  const action = requestBody?.action;
+  const topic = typeof requestBody?.topic === "string" ? requestBody.topic.trim() : "";
+  const count = Number(requestBody?.count);
+  const difficulty = typeof requestBody?.difficulty === "string"
+    ? requestBody.difficulty.trim()
+    : "Средний";
+
+  if (action === "generate_test") {
+    if (topic.length < 2 || topic.length > 200 || !Number.isInteger(count) || count < 3 || count > 20) {
+      return response.status(400).json({ error: "Укажите тему и от 3 до 20 вопросов." });
+    }
+  } else if (
     !Array.isArray(messages) ||
     messages.length === 0 ||
     messages.length > MAX_MESSAGES ||
@@ -83,12 +99,11 @@ export default async function handler(request, response) {
     console.error("AI profile lookup failed", profileError.message);
     return response.status(503).json({ error: "Не удалось проверить доступ к ИИ-помощнику." });
   }
-  if (
-    !profile ||
-    profile.status !== "approved" ||
-    !["teacher", "admin"].includes(profile.role)
-  ) {
-    return response.status(403).json({ error: "ИИ-помощник доступен только одобренным преподавателям." });
+  if (!profile || profile.status !== "approved") {
+    return response.status(403).json({ error: "ИИ-помощник доступен только одобренным аккаунтам." });
+  }
+  if (action === "generate_test" && !["teacher", "admin"].includes(profile.role)) {
+    return response.status(403).json({ error: "Генератор тестов доступен только одобренным преподавателям." });
   }
 
   const rateLimitUrl = process.env.UPSTASH_REDIS_REST_URL;
@@ -149,14 +164,26 @@ export default async function handler(request, response) {
       },
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Ты — учебный помощник по экономике. Отвечай на русском языке, объясняй понятными словами, отделяй факты от предположений и не выдавай ответ теста до завершения попытки.",
-          },
-          ...messages.map(({ role, content }) => ({ role, content: content.trim() })),
-        ],
+        messages: action === "generate_test"
+          ? [
+              {
+                role: "system",
+                content:
+                  "Ты — составитель учебных тестов по экономике. Создай строго валидный JSON без Markdown и пояснений вне JSON. Формат: {\"title\":\"...\",\"questions\":[{\"prompt\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correctIndex\":0,\"explanation\":\"...\"}]}. Количество вариантов — 4, правильный индекс от 0 до 3. Вопросы должны быть однозначными и фактически корректными.",
+              },
+              {
+                role: "user",
+                content: `Составь тест на тему «${topic}». Количество вопросов: ${count}. Сложность: ${difficulty}. Ответы и объяснения дай на русском языке.`,
+              },
+            ]
+          : [
+              {
+                role: "system",
+                content:
+                  "Ты — универсальный учебный помощник по экономике и смежным темам. Отвечай на русском языке ясно и по существу. Для сложных вопросов объясняй пошагово, отделяй факты от предположений и не выдавай готовые решения теста до завершения попытки.",
+              },
+              ...messages.map(({ role, content }) => ({ role, content: content.trim() })),
+            ],
         temperature: 0.4,
       }),
       signal: controller.signal,
